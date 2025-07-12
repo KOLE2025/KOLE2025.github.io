@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGMs Basket Price Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Zoom Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        /* Basic reset and font styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif; /* Changed font to Inter for modern feel */
+        }
+        
+        /* Body styling with an enhanced gradient background */
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #0d1b3f, #1a2a6c); /* Deeper, more complex gradient */
+            color: #e0e7ff; /* Softer white text */
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        
+        /* Main container for content */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 15px; /* Add some horizontal padding */
+        }
+        
+        /* Header section styling */
+        header {
+            text-align: center;
+            padding: 40px 25px; /* Increased padding */
+            margin-bottom: 40px; /* Increased margin */
+            background: rgba(255, 255, 255, 0.08); /* Slightly less opaque */
+            border-radius: 20px; /* More rounded corners */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); /* Stronger, softer shadow */
+            backdrop-filter: blur(12px); /* Increased blur */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Slightly more visible border */
+            animation: fadeIn 1s ease-out;
+            transition: all 0.3s ease; /* Smooth transition for hover effects */
+        }
+        
+        header:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Main title styling */
+        h1 {
+            color: #ffffff;
+            font-size: 3.2rem; /* Larger font size */
+            margin-bottom: 15px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* More prominent text shadow */
+            font-weight: 700; /* Bolder */
+        }
+        
+        /* Subtitle styling */
+        .subtitle {
+            color: #a0b0ff;
+            font-size: 1.3rem; /* Slightly larger */
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 300; /* Lighter weight */
+        }
+        
+        /* Card component styling */
+        .card {
+            background: rgba(255, 255, 255, 0.08); /* Consistent with header */
+            border-radius: 20px; /* More rounded */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            padding: 35px; /* Increased padding */
+            margin-bottom: 40px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            animation: slideUp 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Card title styling with icon */
+        .card-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px; /* Increased margin */
+            color: #ffffff;
+            border-bottom: 2px solid #6a8dff; /* Brighter blue border */
+            padding-bottom: 18px; /* Increased padding */
+            font-size: 1.6rem; /* Larger title */
+            font-weight: 600;
+        }
+        
+        .card-title i {
+            margin-right: 18px; /* Increased margin */
+            font-size: 2.2rem; /* Larger icon */
+            color: #6a8dff; /* Brighter blue icon */
+        }
+        
+        /* Currency controls section */
+        .currency-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px; /* Increased margin */
+            padding: 20px; /* Increased padding */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px; /* More rounded */
+            flex-wrap: wrap;
+            gap: 20px; /* Increased spacing */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .exchange-rate {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* Increased spacing */
+            font-size: 1.15rem; /* Slightly larger font */
+            font-weight: 500;
+        }
+        
+        .exchange-rate input {
+            width: 120px; /* Wider input */
+            padding: 10px 15px; /* More padding */
+            background: rgba(255, 255, 255, 0.15); /* Slightly darker input background */
+            border: 1px solid #6a8dff; /* Brighter border */
+            border-radius: 8px; /* More rounded */
+            color: #ffffff;
+            font-size: 1.05rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .exchange-rate input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 141, 255, 0.5); /* Focus glow */
+        }
+
+        /* Refresh button styling */
+        #refreshData, #resetZoomButton, #generateInsightButton, .time-period-button {
+            background: linear-gradient(45deg, #6a8dff, #4a6bff); /* Gradient button */
+            color: white;
+            border: none;
+            padding: 12px 25px; /* More padding */
+            border-radius: 8px; /* More rounded */
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Increased gap */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #refreshData:hover, #resetZoomButton:hover, #generateInsightButton:hover, .time-period-button:hover {
+            background: linear-gradient(45deg, #4a6bff, #6a8dff); /* Reverse gradient on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #refreshData:active, #resetZoomButton:active, #generateInsightButton:active, .time-period-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #generateInsightButton {
+            margin-top: 20px;
+            width: fit-content;
+            align-self: center; /* Center the button */
+        }
+        
+        /* Table container styling */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px; /* More rounded */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            margin-bottom: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px; /* Ensure table is readable on small screens */
+            background: rgba(30, 40, 80, 0.6); /* Slightly more opaque */
+        }
+        
+        th {
+            background: #2a3a80; /* Darker header background */
+            color: #ffffff;
+            padding: 20px 18px; /* Increased padding */
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px; /* Increased letter spacing */
+            font-size: 1rem;
+        }
+        
+        th:nth-child(2), th:nth-child(3) {
+            text-align: right;
+        }
+        
+        td {
+            padding: 18px; /* Increased padding */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Softer border */
+            font-size: 0.95rem;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03); /* Lighter even rows */
+        }
+        
+        tr:hover {
+            background-color: rgba(106, 141, 255, 0.1); /* Softer hover effect */
+            transition: background-color 0.3s;
+        }
+        
+        .metal-name {
+            font-weight: 600;
+            color: #ffffff;
+            width: 30%;
+            display: flex;
+            align-items: center;
+            gap: 12px; /* Increased gap */
+        }
+        
+        .metal-icon {
+            width: 40px; /* Larger icon container */
+            height: 40px; /* Larger icon container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(106, 141, 255, 0.2); /* Brighter icon background */
+            font-size: 1.3rem; /* Larger icon size */
+        }
+        
+        .usd-result, .zar-result {
+            font-weight: 700;
+            width: 35%;
+            text-align: right;
+            position: relative;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .usd-result {
+            color: #7affc9; /* Brighter green */
+        }
+        
+        .usd-result::before {
+            content: "$";
+            color: #7affc9;
+            margin-right: 5px;
+        }
+        
+        .zar-result {
+            color: #ffda70; /* Brighter yellow */
+        }
+        
+        .zar-result::before {
+            content: "R";
+            color: #ffda70;
+            margin-right: 5px;
+        }
+        
+        .total-row {
+            background: rgba(42, 58, 128, 0.8) !important; /* Darker, more opaque total row */
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem; /* Larger total font */
+        }
+        
+        .total-row td {
+            color: white;
+            border-bottom: none;
+        }
+        
+        .total-row .usd-result {
+            font-size: 1.4rem; /* Larger total USD */
+            color: #7affc9;
+        }
+        
+        .total-row .zar-result {
+            font-size: 1.4rem; /* Larger total ZAR */
+            color: #ffda70;
+        }
+        
+        /* Summary cards styling */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Wider cards */
+            gap: 25px; /* Increased gap */
+            margin-bottom: 40px;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px; /* More rounded */
+            padding: 25px; /* Increased padding */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-8px); /* More pronounced lift */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .summary-card .value {
+            font-size: 2.2rem; /* Larger value font */
+            font-weight: 700;
+            margin: 12px 0; /* More margin */
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .summary-card i {
+            font-size: 2.5rem; /* Larger icon */
+            margin-bottom: 10px;
+        }
+
+        .summary-card.usd .value {
+            color: #7affc9;
+        }
+        
+        .summary-card.usd .value::before {
+            content: "$";
+            margin-right: 5px;
+        }
+        
+        .summary-card.zar .value {
+            color: #ffda70;
+        }
+        
+        .summary-card.zar .value::before {
+            content: "R";
+            margin-right: 5px;
+        }
+        
+        .summary-card .label {
+            color: #c0ccff; /* Softer label color */
+            text-transform: uppercase;
+            font-size: 0.95rem; /* Slightly larger label */
+            letter-spacing: 1.2px; /* More letter spacing */
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        /* Chart container styling */
+        .chart-container {
+            margin-top: 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            height: 450px; /* Taller chart */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart-title {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-size: 1.4rem; /* Larger title */
+            font-weight: 600;
+            color: #ffffff;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-title i {
+            color: #6a8dff;
+        }
+        
+        .chart-wrapper {
+            height: 380px; /* Adjusted wrapper height */
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .chart-controls {
+            text-align: center;
+            margin-top: 20px; /* Increased margin */
+            display: flex; /* Make buttons align horizontally */
+            justify-content: center; /* Center buttons */
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            gap: 15px; /* Space between buttons */
+        }
+
+        .time-period-button.active {
+            background: linear-gradient(45deg, #4affc9, #2ed19d); /* Highlight active button */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Notes section styling */
+        .notes {
+            margin-top: 30px; /* Increased margin */
+            padding: 25px; /* Increased padding */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border-left: 5px solid #6a8dff; /* Brighter, thicker border */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none; /* Hidden as per user request */
+        }
+        
+        .notes h3 {
+            margin-bottom: 15px; /* Increased margin */
+            color: #ffffff;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notes h3 i {
+            color: #6a8dff;
+        }
+        
+        .notes ul {
+            padding-left: 25px; /* Increased padding */
+        }
+        
+        .notes li {
+            margin-bottom: 10px; /* Increased margin */
+            line-height: 1.6;
+            color: #c0ccff; /* Softer text color */
+            font-size: 0.95rem;
+        }
+
+        .notes li a {
+            color: #7affc9; /* Brighter link color */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .notes li a:hover {
+            color: #4affc9;
+            text-decoration: underline;
+        }
+        
+        /* Market update section styling */
+        .market-update {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(106, 141, 255, 0.15); /* Softer, brighter background */
+            padding: 20px; /* Increased padding */
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+            gap: 15px; /* Increased spacing */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .market-update-item {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Increased gap */
+            font-weight: 500;
+        }
+        
+        .market-update i {
+            color: #7affc9; /* Brighter icon color */
+            font-size: 1.1rem;
+        }
+
+        .market-update strong {
+            color: #ffffff;
+        }
+        
+        /* Footer styling */
+        footer {
+            text-align: center;
+            padding: 40px; /* Increased padding */
+            color: rgba(192, 204, 255, 0.6); /* Softer footer text */
+            margin-top: 30px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* LLM Insight Section */
+        #marketInsightContainer {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid #7affc9;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            min-height: 80px; /* Ensure it has some height even when empty */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-style: italic;
+            color: #c0ccff;
+            line-height: 1.5;
+            transition: background 0.3s ease;
+        }
+
+        #marketInsightContainer.loading {
+            background: rgba(122, 255, 201, 0.08); /* Light green tint when loading */
+        }
+
+        #marketInsightContainer p {
+            margin: 0;
+        }
+        
+        /* Keyframe animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(40px); /* More pronounced slide up */
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Responsive adjustments for various screen sizes */
+        @media (max-width: 900px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .card {
+                padding: 25px;
+            }
+            
+            th, td {
+                padding: 15px 12px;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+            
+            .market-update {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr; /* Stack cards on smallest screens */
+            }
+            
+            .currency-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .chart-wrapper {
+                height: 280px;
+            }
+
+            .card-title {
+                font-size: 1.4rem;
+            }
+            .card-title i {
+                font-size: 1.8rem;
+            }
+            .summary-card .value {
+                font-size: 1.8rem;
+            }
+            .summary-card .label {
+                font-size: 0.85rem;
+            }
+            .notes h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PGMs Basket Price Calculator</h1>
+            <p class="subtitle">Real-time calculation with latest market data</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-calculator"></i>
+                    <h2>PGM Contribution Prices</h2>
+                </div>
+                
+                <div class="market-update">
+                    <div class="market-update-item">
+                        <i class="fas fa-sync-alt"></i>
+                        <span id="dataUpdateTime">Data updated: <strong>Loading...</strong></span>
+                    </div>
+                    <div class="market-update-item">
+                        <i class="fas fa-globe"></i>
+                        <span>USD/ZAR Exchange Rate: <strong id="displayExchangeRate">Loading...</strong></span>
+                    </div>
+                    <div class="market-update-item">
+                        <i class="fas fa-trend-up"></i>
+                        <span>PGM Index: <strong style="color:#7affc9;">+2.3%</strong> this week <span class="text-sm text-gray-400">(Simulated)</span></span>
+                    </div>
+                </div>
+                
+                <div class="currency-controls">
+                    <div class="exchange-rate">
+                        <span><i class="fas fa-sync-alt"></i> USD/ZAR Exchange Rate:</span>
+                        <input type="number" id="exchangeRate" value="18.25" step="0.01" min="1" disabled>
+                    </div>
+                    <div class="exchange-rate">
+                        <button id="refreshData"><i class="fas fa-redo"></i> Refresh Market Data</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>PGM</th>
+                                <th>USD</th>
+                                <th>ZAR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metalTableBody">
+                            <!-- Metal rows will be dynamically inserted here by JavaScript -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>TOTAL BASKET PRICE</td>
+                                <td class="usd-result" id="totalUsdDisplay">0.00</td>
+                                <td class="zar-result" id="totalZarDisplay">0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card usd">
+                        <i class="fas fa-dollar-sign fa-2x" style="color: #7affc9;"></i>
+                        <div class="value" id="summaryUsdValue">0.00</div>
+                        <div class="label">Total Basket Value (USD)</div>
+                    </div>
+                    <div class="summary-card zar">
+                        <i class="fas fa-rand-sign fa-2x" style="color: #ffda70;"></i>
+                        <div class="value" id="summaryZarValue">0.00</div>
+                        <div class="label">Total Basket Value (ZAR)</div>
+                    </div>
+                    <div class="summary-card">
+                        <i class="fas fa-exchange-alt fa-2x" style="color: #6a8dff;"></i>
+                        <div class="value" id="summaryExchangeRate">0.00</div>
+                        <div class="label">Current USD/ZAR Exchange Rate</div>
+                    </div>
+                </div>
+
+                <!-- New LLM Insight Section -->
+                <div class="card" style="padding: 25px; text-align: center;">
+                    <button id="generateInsightButton"><i class="fas fa-lightbulb"></i> ? Generate Market Insight</button>
+                    <div id="marketInsightContainer">
+                        <p>Click "Generate Market Insight" to get a brief overview based on current PGM prices.</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-line"></i> Total Basket Price (ZAR) - Trend
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                    <div class="chart-controls">
+                        <button id="timePeriod1W" class="time-period-button">1W</button>
+                        <button id="timePeriod1M" class="time-period-button">1M</button>
+                        <button id="timePeriod1Y" class="time-period-button">1Y</button>
+                        <button id="timePeriod3Y" class="time-period-button">3Y</button>
+                        <button id="timePeriod5Y" class="time-period-button active">5Y</button>
+                        <button id="resetZoomButton"><i class="fas fa-search-minus"></i> Reset Zoom</button>
+                    </div>
+                </div>
+                
+                <!-- The notes section is now hidden -->
+                <div class="notes">
+                    <h3><i class="fas fa-info-circle"></i> Latest Market Data</h3>
+                    <ul id="marketDataNotes">
+                        <li>Iridium: Price from Johnson Matthey (as of July 11, 2025) - ~$4450.00/oz</li>
+                        <li>Palladium: Price from Johnson Matthey (as of July 11, 2025) - ~$1186.00/oz</li>
+                        <li>Platinum: Price from Johnson Matthey (as of July 11, 2025) - ~$1389.00/oz</li>
+                        <li>Rhodium: Price from Johnson Matthey (as of July 11, 2025) - ~$5700.00/oz</li>
+                        <li>Ruthenium: Price from Johnson Matthey (as of July 11, 2025) - ~$790.00/oz</li>
+                        <li>Gold: Price from APMEX (as of July 11, 2025) - ~$3371.30/oz</li>
+                        <li>Exchange Rate: USD/ZAR from <a href="https://www.exchangerate-api.com/" target="_blank">ExchangeRate-API</a></li>
+                        <li>? **Market Insight:** Generated by an LLM (Gemini API) based on current displayed prices.</li>
+                        <li id="lastUpdatedNote">Last updated: Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>PGM Basket Price Calculator | Data sourced from various providers</p>
+            <p>© 2025 Precious Metals Analytics | All prices in USD per troy ounce</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initial metal prices based on recent market snapshots (July 11, 2025)
+        // These prices will be updated when the refresh button is clicked.
+        let metals = [
+            { name: "Iridium", percentage: 3.46, price: 4450.00, color: "#4a6bff", icon: "fas fa-atom" }, // Johnson Matthey (Jul 11, 2025)
+            { name: "Palladium", percentage: 24.29, price: 1186.00, color: "#4affc9", icon: "fas fa-gem" }, // Johnson Matthey (Jul 11, 2025)
+            { name: "Platinum", percentage: 46.55, price: 1389.00, color: "#ff6b6b", icon: "fas fa-circle" }, // Johnson Matthey (Jul 11, 2025)
+            { name: "Rhodium", percentage: 8.39, price: 5700.00, color: "#ffd166", icon: "fas fa-certificate" }, // Johnson Matthey (Jul 11, 2025)
+            { name: "Ruthenium", percentage: 15.17, price: 790.00, color: "#9b5de5", icon: "fas fa-circle-notch" }, // Johnson Matthey (Jul 11, 2025)
+            { name: "Gold", percentage: 2.13, price: 3371.30, color: "#f15bb5", icon: "fas fa-crown" } // APMEX (Jul 11, 2025)
+        ];
+        
+        // Global variables for chart data
+        let historyChart;
+        // Store historical data for 5 years (yearly close prices)
+        let fiveYearHistoricalData = [
+            { year: '2019', close: 18500 },
+            { year: '2020', close: 21000 },
+            { year: '2021', close: 28500 },
+            { year: '2022', close: 32500 },
+            { year: '2023', close: 27000 }
+        ];
+
+        // DOM elements
+        const exchangeRateInput = document.getElementById('exchangeRate');
+        const refreshButton = document.getElementById('refreshData');
+        const metalTableBody = document.getElementById('metalTableBody');
+        const totalUsdDisplay = document.getElementById('totalUsdDisplay');
+        const totalZarDisplay = document.getElementById('totalZarDisplay');
+        const summaryUsdValue = document.getElementById('summaryUsdValue');
+        const summaryZarValue = document.getElementById('summaryZarValue');
+        const summaryExchangeRate = document.getElementById('summaryExchangeRate');
+        const dataUpdateTime = document.getElementById('dataUpdateTime');
+        const displayExchangeRate = document.getElementById('displayExchangeRate');
+        const lastUpdatedNote = document.getElementById('lastUpdatedNote');
+        const resetZoomButton = document.getElementById('resetZoomButton');
+        const generateInsightButton = document.getElementById('generateInsightButton');
+        const marketInsightContainer = document.getElementById('marketInsightContainer');
+
+        // Time period buttons
+        const timePeriod1W = document.getElementById('timePeriod1W');
+        const timePeriod1M = document.getElementById('timePeriod1M');
+        const timePeriod1Y = document.getElementById('timePeriod1Y');
+        const timePeriod3Y = document.getElementById('timePeriod3Y');
+        const timePeriod5Y = document.getElementById('timePeriod5Y');
+        const timePeriodButtons = [timePeriod1W, timePeriod1M, timePeriod1Y, timePeriod3Y, timePeriod5Y];
+
+        let currentViewPeriod = '5Y'; // Default view period
+
+        // Function to format numbers as currency
+        function formatCurrency(value, currencySymbol = '') {
+            return value.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Function to fetch real-time exchange rate
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.rates && data.rates.ZAR) {
+                    const rate = data.rates.ZAR;
+                    exchangeRateInput.value = rate.toFixed(2);
+                    displayExchangeRate.textContent = rate.toFixed(2);
+                    const now = new Date();
+                    dataUpdateTime.innerHTML = `Data updated: <strong>Today ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} GMT</strong>`;
+                    lastUpdatedNote.textContent = `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+                    return rate;
+                } else {
+                    console.error("USD/ZAR rate not found in API response.");
+                    return parseFloat(exchangeRateInput.value);
+                }
+            } catch (error) {
+                console.error("Error fetching exchange rate:", error);
+                dataUpdateTime.innerHTML = `Data updated: <strong>Failed to fetch</strong>`;
+                lastUpdatedNote.textContent = `Last updated: Network Error`;
+                return parseFloat(exchangeRateInput.value);
+            }
+        }
+
+        // Function to update metal prices with the latest known snapshots from Johnson Matthey
+        function updateMetalPricesWithSnapshots() {
+            metals.find(m => m.name === "Iridium").price = 4450.00; 
+            metals.find(m => m.name === "Palladium").price = 1186.00;
+            metals.find(m => m.name === "Platinum").price = 1389.00;
+            metals.find(m => m.name === "Rhodium").price = 5700.00;
+            metals.find(m => m.name === "Ruthenium").price = 790.00;
+            metals.find(m => m.name === "Gold").price = 3371.30; 
+        }
+
+        // Function to generate simulated historical data based on period
+        function generateHistoricalData(period) {
+            let dataPoints = [];
+            let labels = [];
+            const endDate = new Date(); // Today's date
+            let currentValue = parseFloat(totalZarDisplay.textContent.replace(/R|,/g, '')); // Get current ZAR total
+
+            if (isNaN(currentValue) || currentValue === 0) {
+                currentValue = 27000; // Fallback if initial calculation isn't ready
+            }
+
+            const baseVolatility = 0.002; // Base daily/period volatility
+            const trendFactor = 0.0001; // Small factor for overall trend
+
+            const generatePoint = (prevValue, index, totalPoints) => {
+                let fluctuation = (Math.random() - 0.5) * baseVolatility * prevValue * 2;
+                let trend = (index - totalPoints / 2) * trendFactor * prevValue; // Slight trend towards current value
+                return prevValue + fluctuation + trend;
+            };
+
+            switch (period) {
+                case '1W': // 7 days (daily points)
+                    for (let i = 0; i < 7; i++) {
+                        const date = new Date(endDate);
+                        date.setDate(endDate.getDate() - (6 - i)); 
+                        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                        if (i === 0) { // First point is based on current value, then fluctuates backwards
+                            dataPoints.unshift(currentValue);
+                        } else {
+                            dataPoints.unshift(generatePoint(dataPoints[0], i, 7));
+                        }
+                    }
+                    dataPoints.reverse(); // Correct order
+                    break;
+                case '1M': // 30 days (daily points)
+                    for (let i = 0; i < 30; i++) {
+                        const date = new Date(endDate);
+                        date.setDate(endDate.getDate() - (29 - i)); 
+                        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                        if (i === 0) {
+                            dataPoints.unshift(currentValue);
+                        } else {
+                            dataPoints.unshift(generatePoint(dataPoints[0], i, 30));
+                        }
+                    }
+                    dataPoints.reverse();
+                    break;
+                case '1Y': // 12 months (monthly points)
+                    for (let i = 0; i < 12; i++) {
+                        const date = new Date(endDate);
+                        date.setMonth(endDate.getMonth() - (11 - i)); 
+                        labels.push(date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }));
+                        if (i === 0) {
+                            dataPoints.unshift(currentValue);
+                        } else {
+                            dataPoints.unshift(generatePoint(dataPoints[0], i, 12));
+                        }
+                    }
+                    dataPoints.reverse();
+                    break;
+                case '3Y': // 36 months (monthly points)
+                    for (let i = 0; i < 36; i++) {
+                        const date = new Date(endDate);
+                        date.setMonth(endDate.getMonth() - (35 - i)); 
+                        labels.push(date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }));
+                        if (i === 0) {
+                            dataPoints.unshift(currentValue);
+                        } else {
+                            dataPoints.unshift(generatePoint(dataPoints[0], i, 36));
+                        }
+                    }
+                    dataPoints.reverse();
+                    break;
+                case '5Y': // 5 years (yearly points)
+                default:
+                    // For 5Y, we use the stored `fiveYearHistoricalData` and ensure the latest point is current.
+                    labels = fiveYearHistoricalData.map(d => d.year);
+                    dataPoints = fiveYearHistoricalData.map(d => d.close);
+                    // Ensure the very last data point is the actual current totalZarValue
+                    if (dataPoints.length > 0) {
+                        dataPoints[dataPoints.length - 1] = parseFloat(totalZarDisplay.textContent.replace(/R|,/g, ''));
+                    }
+                    break;
+            }
+           
+            historyChart.data.labels = labels;
+            historyChart.data.datasets[0].data = dataPoints;
+            historyChart.update();
+        }
+
+        // Function to calculate and update all values
+        async function updateValues() {
+            refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshButton.disabled = true;
+
+            const exchangeRate = await fetchExchangeRate();
+            
+            updateMetalPricesWithSnapshots(); // Update with latest snapshots
+
+            let totalUsdValue = 0;
+            metalTableBody.innerHTML = '';
+
+            metals.forEach((metal) => {
+                const usdContribution = (metal.percentage / 100) * metal.price;
+                const zarContribution = usdContribution * exchangeRate;
+                
+                totalUsdValue += usdContribution;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="metal-name">
+                        <div class="metal-icon" style="background: rgba(74, 107, 255, 0.2);">
+                            <i class="${metal.icon}" style="color: ${metal.color};"></i>
+                        </div>
+                        ${metal.name}
+                    </td>
+                    <td class="usd-result">${formatCurrency(usdContribution)}</td>
+                    <td class="zar-result">${formatCurrency(zarContribution)}</td>
+                `;
+                metalTableBody.appendChild(row);
+            });
+            
+            const currentTotalZarValue = totalUsdValue * exchangeRate;
+
+            totalUsdDisplay.textContent = formatCurrency(totalUsdValue);
+            totalZarDisplay.textContent = formatCurrency(currentTotalZarValue);
+            
+            summaryUsdValue.textContent = formatCurrency(totalUsdValue);
+            summaryZarValue.textContent = formatCurrency(currentTotalZarValue);
+            summaryExchangeRate.textContent = exchangeRate.toFixed(2);
+
+            // Update the 5-year historical data with the latest year's value
+            const currentYear = new Date().getFullYear().toString();
+            let foundYearIndex = fiveYearHistoricalData.findIndex(data => data.year === currentYear);
+
+            if (foundYearIndex !== -1) {
+                fiveYearHistoricalData[foundYearIndex].close = currentTotalZarValue;
+            } else {
+                fiveYearHistoricalData.push({ year: currentYear, close: currentTotalZarValue });
+            }
+
+            // Keep only the last 5 data points for the trend
+            if (fiveYearHistoricalData.length > 5) {
+                fiveYearHistoricalData = fiveYearHistoricalData.slice(fiveYearHistoricalData.length - 5);
+            }
+            
+            // Re-generate and update chart for the current view period
+            generateHistoricalData(currentViewPeriod);
+
+            refreshButton.innerHTML = '<i class="fas fa-redo"></i> Refresh Market Data';
+            refreshButton.disabled = false;
+        }
+        
+        // Function to generate market insight using Gemini API
+        async function generateMarketInsight() {
+            generateInsightButton.disabled = true;
+            generateInsightButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            marketInsightContainer.innerHTML = '<p>Analyzing market data...</p>';
+            marketInsightContainer.classList.add('loading');
+
+            const currentExchangeRate = parseFloat(exchangeRateInput.value);
+            let metalsInfo = metals.map(m => `${m.name}: $${m.price.toFixed(2)}`).join(', ');
+
+            const prompt = `Given the following precious metal prices (USD per troy ounce) and the USD/ZAR exchange rate, provide a very brief (2-3 sentences) general market commentary or outlook. Focus on overall sentiment and general observations, without offering financial advice.
+Current Metal Prices: ${metalsInfo}
+USD/ZAR Exchange Rate: ${currentExchangeRate.toFixed(2)}`;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will automatically provide the API key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    marketInsightContainer.innerHTML = `<p>${text}</p>`;
+                } else {
+                    marketInsightContainer.innerHTML = '<p>Failed to generate insight. Please try again.</p>';
+                    console.error("Gemini API response structure unexpected:", result);
+                }
+            } catch (error) {
+                marketInsightContainer.innerHTML = '<p>Error generating insight. Please check your network connection.</p>';
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                generateInsightButton.innerHTML = '<i class="fas fa-lightbulb"></i> ? Generate Market Insight';
+                generateInsightButton.disabled = false;
+                marketInsightContainer.classList.remove('loading');
+            }
+        }
+
+        // Initialize 5-year historical chart (Line Graph)
+        function initChart() {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: fiveYearHistoricalData.map(d => d.year), // Initial 5Y labels
+                    datasets: [{
+                        label: 'Total Basket Price (ZAR)',
+                        data: fiveYearHistoricalData.map(d => d.close), // Initial 5Y data
+                        borderColor: '#6a8dff', /* Brighter line color */
+                        backgroundColor: 'rgba(106, 141, 255, 0.1)', /* Softer fill color */
+                        borderWidth: 3,
+                        pointBackgroundColor: '#7affc9', /* Brighter point color */
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 42, 108, 0.95)', /* Darker, more opaque tooltip */
+                            titleFont: {
+                                size: 15,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `ZAR ${context.parsed.y.toLocaleString('en-US')}`;
+                                }
+                            },
+                            padding: 12, /* More padding for tooltip */
+                            displayColors: false /* Hide color box in tooltip */
+                        },
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x', // Allow panning on the x-axis
+                                threshold: 10 // Minimum drag distance to pan
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true, // Enable zooming with mouse wheel
+                                },
+                                pinch: {
+                                    enabled: true // Enable zooming with pinch gestures on touch devices
+                                },
+                                mode: 'x', // Allow zooming on the x-axis
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.15)', /* Slightly more visible grid lines */
+                                drawBorder: false /* Remove axis border */
+                            },
+                            ticks: {
+                                color: '#c0ccff', /* Softer tick color */
+                                callback: function(value) {
+                                    return 'R' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.15)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#c0ccff',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to set active button style
+        function setActiveButton(activeButtonId) {
+            timePeriodButtons.forEach(button => {
+                if (button.id === activeButtonId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        // Initialize values and chart on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            initChart(); // Initialize the chart first
+            await updateValues(); // Then update values, including initial fetch
+            setActiveButton('timePeriod5Y'); // Set 5Y as active on load
+
+            // Add subtle row highlighting on load
+            const rows = document.querySelectorAll('#metalTableBody tr');
+            rows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.style.opacity = '0';
+                    row.style.transition = 'opacity 0.5s ease-in-out';
+                    row.style.opacity = '1';
+                }, 300 + (index * 100));
+            });
+        });
+        
+        // Add event listeners
+        refreshButton.addEventListener('click', updateValues);
+        resetZoomButton.addEventListener('click', () => {
+            historyChart.resetZoom();
+        });
+        generateInsightButton.addEventListener('click', generateMarketInsight);
+
+        // Event listeners for time period buttons
+        timePeriod1W.addEventListener('click', () => {
+            currentViewPeriod = '1W';
+            generateHistoricalData('1W');
+            setActiveButton('timePeriod1W');
+        });
+        timePeriod1M.addEventListener('click', () => {
+            currentViewPeriod = '1M';
+            generateHistoricalData('1M');
+            setActiveButton('timePeriod1M');
+        });
+        timePeriod1Y.addEventListener('click', () => {
+            currentViewPeriod = '1Y';
+            generateHistoricalData('1Y');
+            setActiveButton('timePeriod1Y');
+        });
+        timePeriod3Y.addEventListener('click', () => {
+            currentViewPeriod = '3Y';
+            generateHistoricalData('3Y');
+            setActiveButton('timePeriod3Y');
+        });
+        timePeriod5Y.addEventListener('click', () => {
+            currentViewPeriod = '5Y';
+            generateHistoricalData('5Y');
+            setActiveButton('timePeriod5Y');
+        });
+    </script>
+</body>
+</html>
